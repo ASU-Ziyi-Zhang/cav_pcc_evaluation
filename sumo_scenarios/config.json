@@ -1,0 +1,21 @@
+{
+    "EXP": "3b",
+    "N_TRIALS": 20000,
+    "N_JOBS": 120,
+    "RDS_DIR": "..\\..\\data\\RDS\\I24_WB_52_60_11132023.csv",
+    "SUMO_PATH": {
+        "CSI": "C:\\Users\\yanbing.wang\\source\\repos\\sumo\\bin\\sumo",
+        "VMS": "C:\\Program Files (x86)\\Eclipse\\Sumo\\bin\\sumo.exe",
+        "SOL": "/packages/apps/spack/21/opt/spack/linux-rocky8-zen3/gcc-12.1.0/sumo-1.19.0-hkbmitts4svgguaerh3osctddszoeu4m/bin/sumo"
+    },
+    "onramp":{
+        "SIMULATION_TIME": 480,
+        "N_ROUTES": 2,
+        "N_INTERVALS": 1
+    },
+    "i24":{
+        "SIMULATION_TIME": 21600,
+        "N_ROUTES": 5,
+        "N_INTERVALS": 12
+    }
+}

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<routes>
+
+
+  <vType id="hdv" carFollowModel="IDM" speedFactor="1" maxSpeed="35.46631186967486" minGap="2.94390525189298" accel="2.3655452248462066" decel="3.207636533267079" tau="1.6603715426741472" emergencyDecel="8.00" delta="4.00" laneChangeModel="LC2013" lcStrategic="0.5091719209419492" lcCooperative="0.8854467728463593" lcAssertive="4.815590691539943" lcSpeedGain="1.1639111046014528" lcKeepRight="0.0" lcOvertakeRight="0.877" />
+
+  <vType id="cav" carFollowModel="IDM" speedFactor="1" maxSpeed="35.46631186967486" minGap="2.94390525189298" accel="2.3655452248462066" decel="3.207636533267079" tau="1.6603715426741472" emergencyDecel="8.00" delta="4.00" laneChangeModel="LC2013" lcStrategic="0.5091719209419492" lcCooperative="0.8854467728463593" lcAssertive="4.815590691539943" lcSpeedGain="1.1639111046014528" lcKeepRight="0.0" lcOvertakeRight="0.877" />
+ 
+    <route id="ramp" edges="ramp E2 E4" />
+	<route id="mainlane" edges="E0 E1 E2 E4 " />
+	
+    <flow id="mainlane_hdv" type="hdv" begin="0" end="300" vehsPerHour="4500.0" route="mainlane" departLane="random" departSpeed="desired" /><flow id="mainlane_cav" type="cav" begin="0" end="300" vehsPerHour="500.0" route="mainlane" departLane="random" departSpeed="desired" /><flow id="ramp_0_hdv" type="hdv" begin="1" end="300" vehsPerHour="900.0" route="ramp" departLane="random" departSpeed="desired" /><flow id="ramp_0_cav" type="cav" begin="1" end="300" vehsPerHour="100.0" route="ramp" departLane="random" departSpeed="desired" /></routes>

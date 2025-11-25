@@ -1,0 +1,22 @@
+
+<configuration>
+
+    <input>
+        <net-file value="onramp.net.xml"/>
+        <route-files value="onramp_p0.1.rou.xml"/>
+    </input>
+    <output>
+        <edgedata-output value="./output/by_edge.xml"/>
+        <lanedata-output value="./output/by_lane.xml"/>
+        <statistic-output value="./output/stats.xml"/>
+    </output>
+
+    <time>
+        <begin value="0"/>
+        <end value="20"/>
+        <step-length value="0.1"/>
+    </time>
+	<gui_only>
+		<start value="t"/>
+	</gui_only>
+</configuration>

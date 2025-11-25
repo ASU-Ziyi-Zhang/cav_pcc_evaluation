@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
+  
+    
+    
+    
+  <vType id="hdv" carFollowModel="IDM" speedFactor="1" maxSpeed="35.46631186967486" minGap="2.94390525189298" accel="2.3655452248462066" decel="3.207636533267079" tau="1.6603715426741472" emergencyDecel="8.00" delta="4.00" 
+  lcStrategic="1.4091719209419492" lcCooperative="0.4854467728463593" lcAssertive="4.815590691539943" lcSpeedGain="1.1639111046014528" lcKeepRight="0.30" lcOvertakeRight="0.877" />
+
+  <vType id="cav" carFollowModel="IDM" speedFactor="1" maxSpeed="35.46631186967486" minGap="2.94390525189298" accel="2.3655452248462066" decel="3.207636533267079" tau="1.6603715426741472" emergencyDecel="8.00" delta="4.00" 
+  lcStrategic="1.4091719209419492" lcCooperative="0.4854467728463593" lcAssertive="4.815590691539943" lcSpeedGain="1.1639111046014528" lcKeepRight="0.30" lcOvertakeRight="0.877" />
+
+    
+  <route id="r_0" edges="E0 E1 E3 E5 E7 E8" />
+   
+    
+  <route id="r_1" edges="E0 E1 E3 E4" />
+    
+    
+  <route id="r_2" edges="E2 E1 E3 E4" />
+    
+    
+  <route id="r_3" edges="E2 E1 E3 E5 E7 E8" />
+    
+    
+  <route id="r_4" edges="E6 E7 E8" />
+    
+  
+
+  <flow id="f_10" type="hdv" begin="0" departLane="best" route="r_0" end="1800" vehsPerHour="3430.917776757005" departSpeed="desired" />
+  <flow id="f_11" type="hdv" begin="0" departLane="best" route="r_1" end="1800" vehsPerHour="431.0822232429949" departSpeed="desired" />
+  <flow id="f_12" type="hdv" begin="0" departLane="best" route="r_2" end="1800" vehsPerHour="54.91777675700507" departSpeed="desired" />
+  <flow id="f_13" type="hdv" begin="0" departLane="best" route="r_3" end="1800" vehsPerHour="437.08222324299504" departSpeed="desired" />
+  <flow id="f_14" type="hdv" begin="0" departLane="best" route="r_4" end="1800" vehsPerHour="152.0" departSpeed="desired" />
+
+  <flow id="f_15" type="hdv" begin="1800" departLane="best" route="r_0" end="3600" vehsPerHour="5886.644104803494" departSpeed="desired" />
+  <flow id="f_16" type="hdv" begin="1800" departLane="best" route="r_1" end="3600" vehsPerHour="645.3558951965065" departSpeed="desired" />
+  <flow id="f_17" type="hdv" begin="1800" departLane="best" route="r_2" end="3600" vehsPerHour="78.64410480349352" departSpeed="desired" />
+  <flow id="f_18" type="hdv" begin="1800" departLane="best" route="r_3" end="3600" vehsPerHour="717.355895196506" departSpeed="desired" />
+  <flow id="f_19" type="hdv" begin="1800" departLane="best" route="r_4" end="3600" vehsPerHour="256.0" departSpeed="desired" />
+
+</routes>

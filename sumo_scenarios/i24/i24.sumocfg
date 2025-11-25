@@ -1,0 +1,23 @@
+
+<configuration>
+
+    <input>
+        <net-file value="i24.net.xml"/>
+        <route-files value="i24_p0.1.rou.xml"/>
+        <additional-files value="I24_RDS.add.xml"/>
+    </input>
+
+    <output>
+        <edgedata-output value="by_edge.xml"/>
+        <lanedata-output value="by_lane.xml"/>
+        <statistic-output value="stats.xml"/>
+    </output>
+
+    <time>
+        <step-length value="0.1"/>
+    </time>
+    <gui_only>
+		<start value="t"/>
+	</gui_only>
+
+</configuration>
