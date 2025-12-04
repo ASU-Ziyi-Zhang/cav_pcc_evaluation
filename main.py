@@ -39,24 +39,6 @@
 #   https://sumo.dlr.de/docs/netconvert.html
 #   https://sumo.dlr.de/docs/Netedit/index.html
 
-'''
-Changelog (English-only comments version):
-
-YW [02/14/2025]
-1) Add "CAV penetration rate" configuration function in sumoAPI.
-2) Add scenario configuration in sumoAPI.
-
-YW [03/06/2025]
-1) Switch to TraCI for broader functionality (compared with libsumo).
-2) Update FCD output to include leader ID, leader gap, and headway to leader.
-
-ZY [10/17/2025]
-1) Add a triple‑guard stop in `sim()`: (i) natural completion when `getMinExpectedNumber()==0`,
-   (ii) optional wall‑clock guard via `max_wall_time`, and (iii) simulation‑time guard via
-   `max_sim_time_guard` (falls back to ~2× inferred planned end if available).
-
-'''
-
 import time
 import numpy as np
 from time import perf_counter as counter
@@ -1059,4 +1041,5 @@ class simulation():
 if __name__ == "__main__":
     # Run simulation
     sumo = simulation()
+
     sumo.sim()
