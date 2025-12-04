@@ -61,37 +61,6 @@ SUMO output files
 
 3) by_edge.xml, by_lane.xml
 """
-
-'''
-ZY [10/17/2025]
-1) Introduced an "urban_mode" switch and a full urban‑signal analytics pipeline:
-   - Parsers for TLS time‑series/static tlLogic, detector outputs, and add.xml lane mapping;
-     composed detector→lane→TLS mapping.
-   - Implemented urban metrics: PAoG, GOR (overall & by type), intersection approach delay,
-     queue spillback detection, and Time‑To‑Service (TTS), with optional partial execution
-     when only detector data is available.
-   - Built green‑window extraction and lane‑occupancy grids to support the above metrics.
-
-2) Added `load_or_build_metrics(file_dir, urban_mode)` as a cache loader:
-   - Computes an input‑file signature (mtime + size) and reuses `metrics_p0.1t.pkl` when
-     inputs are unchanged; auto‑rebuilds the cache when they differ.
-   - Enables the Dashboard to load metrics without recomputing when prior results exist.
-
-3) Added robust gating/limits & sanitization knobs for FCD/XML parsing and metric stability:
-   - Gates: `POS_MIN_ANALYSIS`, `TT_USE_POS_GATE`, `ENERGY_USE_POS_GATE`.
-   - Bounds: `V_MAX`, `ACC_MIN`/`ACC_MAX`, `HW_V_EPS`.
-   - Visualization bounds: `SPEED_MIN_HIST`, `SPEED_MAX_HIST`, `ACC_MAX_HIST`.
-   - Sanitization thresholds for PET/TTC/headway/space‑gap to remove numerical artifacts.
-
-4) Reworked `fuel_rate_g_per_s` (fuel model):
-   - Physics‑based traction‑power + auxiliaries with an idle floor and BSFC conversion (g/s),
-     numerically stable at low speed/load; unified, easily tunable parameters (mass, CdA, Crr).
-
-
-'''
-
-
-
 import xml.etree.ElementTree as ET
 import numpy as np
 from math import nan, isnan
@@ -2998,4 +2967,5 @@ if __name__ == "__main__":
 
     # main()
     # ax = vis.visualize_fcd("sumo_scenarios/onramp/output/fcd.xml", lanes=None, color_by="fuel_gps") # test function
+
     # ax.figure.savefig("test.png", dpi=300)
