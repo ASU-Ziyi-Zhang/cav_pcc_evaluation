@@ -15,7 +15,7 @@ On top of the controllers and scenarios, the project provides:
 
 ## Overview
 
-`cav-sumo` provides a reusable environment for exploring **CAV penetration**, **longitudinal controllers**, and **mixed traffic dynamics** in SUMO.
+`cav_pcc_evaluation` provides a reusable environment for exploring **CAV penetration**, **longitudinal controllers**, and **mixed traffic dynamics** in SUMO.
 
 The workflow is:
 
@@ -79,12 +79,12 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
 
 ### Option 1: Linux / macOS (Recommended)
 
-From the repository root (`cav_sumo/`):
+From the repository root (`cav_pcc_evaluation/`):
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd cav_sumo
+cd cav_pcc_evaluation
 
 # Run installer (Python + SUMO + optional controllers)
 . install.sh
@@ -653,6 +653,7 @@ This repository builds on work in:
 
 **Last Updated**: December 2025  
 **Status**: Research / Development Ready
+
 
 
 
