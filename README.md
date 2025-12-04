@@ -1,13 +1,7 @@
-# cav-sumo
+# Connected & Autonomous Vehicle Control in SUMO
 
-Repository containing various calibrated SUMO scenarios and autonomous vehicle controllers for microsimulation of mixed traffic.
-
-This library uses the TraCI API to directly command the acceleration behavior of autonomous vehicle agents in microsimulation.
-
-
-<!-- Requires **I24scenario/** folder to be populated from other project <https://github.com/yanb514/CorridorCalibration> -->
-
-<!-- Requires shared library **.so / .dll** files to be generated from another project <https://github.com/tylerard33/cav_codegen_examples> and needs the accompanying **cwrapper.py** and **cppwrapper.py** interfaces. To run, pull these files into the current working directory -->
+A collection of calibrated SUMO scenarios and connected/autonomous vehicle (CAV) controllers for microsimulation of mixed traffic.
+The repository uses the TraCI API and optional compiled controllers (codegen + C/C++) to directly command CAV longitudinal behavior in simulation.
 
 
 ## File Contents Structure
@@ -260,3 +254,4 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
