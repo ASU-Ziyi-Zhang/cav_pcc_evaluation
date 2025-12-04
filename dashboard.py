@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """
+Author: Ziyi Zhang, Yanbing Wang
 Traffic Simulation Dashboard
 
 This script creates an interactive web dashboard to visualize and analyze traffic simulation 
@@ -34,7 +35,6 @@ Requirements:
 """
 
 '''
-ZY [10/17/2025]
 1) Publication‑style visuals
    - Added `paper_pub` Plotly template (clean grid, serif font, tight margins).
    - Unified color map for HDV/CAV/PAOG/GOR/TTS.
@@ -1775,5 +1775,6 @@ if __name__ == '__main__':
 
     print("Starting Flask development server...")
     app.run(debug=False, host='0.0.0.0', port=8050)
+
 
 
