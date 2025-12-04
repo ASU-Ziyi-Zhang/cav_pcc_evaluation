@@ -30,7 +30,7 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **CAV Longitudinal Control via TraCI**
   - Python-based TraCI control loop with direct access to vehicle states.
@@ -65,7 +65,134 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
   - Scenario-based organization of inputs and outputs for reproducibility.
 ---
 
+##  Installation
 
+### Prerequisites
+
+- **Python** 3.x
+- **SUMO** (installed via this repo or system-wide)
+- **Git** (to clone this repository)
+- **cmake** (required if you want to compile codegen controllers)
+- On Windows: **Visual Studio C/C++ build tools** + **Developer Command Prompt**
+
+---
+
+### Option 1: Linux / macOS (Recommended)
+
+From the repository root (`cav_sumo/`):
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd cav_sumo
+
+# Run installer (Python + SUMO + optional controllers)
+. install.sh
+```
+
+What this does:
+
+- Checks for a valid Python + `pip`.
+- Installs SUMO and required Python packages (globally or in your chosen env).
+- Optionally compiles and installs CAV controllers, placing shared libraries in `cav_sumo/` and copying wrappers to `src/`.
+
+>  You can edit `install.sh` to enable virtual environments, e.g. `USING_VENV=1`.
+
+To run only the controller installers:
+
+```bash
+cd codegen
+. install.sh
+```
+
+---
+
+### Option 2: Windows (Developer Command Prompt / Git Bash)
+
+**Approach A — Git Bash (Unix-like)**
+
+1. Install:
+   - Git (with Git Bash)
+   - Visual Studio C/C++ tools
+   - `cmake`
+2. Open **Git Bash**
+3. Follow the same steps as Linux:
+
+```bash
+git clone <repository-url>
+cd cav_sumo
+. install.sh
+```
+
+**Approach B — Windows Developer Command Prompt**
+
+From the **Developer Command Prompt for VS**:
+
+```bat
+git clone <repository-url>
+cd cav_sumo
+
+rem Run Windows installer
+install.bat
+```
+
+This will:
+
+- Install SUMO dependencies.
+- Attempt to compile the CAV controllers using `cmake`.
+- Copy the shared libraries to the `cav_sumo/` root.
+- Copy `cwrapper.py` to `src/`.
+
+To run only the controller installers (without SUMO install):
+
+```bat
+cd codegen
+install.bat
+```
+
+---
+
+### Option 3: Manual Python & Controller Installation
+
+If you prefer manual setup:
+
+```bash
+# Python packages
+pip install eclipse-sumo
+pip install traci
+pip install libsumo
+```
+
+To build the PCC controller (requires `cmake`):
+
+```bash
+cd codegen
+
+# Choose build type
+BUILD_TYPE=Release  # Options: Debug, RelWithDebInfo, Release
+
+cd pcc_codegen
+mkdir build
+
+cmake -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+cmake --build build --config $BUILD_TYPE
+cmake --install build --config $BUILD_TYPE
+
+rm -r build
+
+python test.py
+```
+
+If the tests pass, copy shared libraries and wrappers into the main repo:
+
+```bash
+cp lib/pcc_so.dll ../../  # or .so on Linux
+cp _cppwrapper.py ../../src/cppwrapper.py
+
+cd ..
+```
+
+---
 
 
 
@@ -324,6 +451,7 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
 
 
 
