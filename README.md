@@ -4,8 +4,32 @@
 [![SUMO](https://img.shields.io/badge/SUMO-microsimulation-orange.svg)](https://www.eclipse.org/sumo/)
 [![License](https://img.shields.io/badge/license-See%20LICENSE-green.svg)](LICENSE)
 
-A collection of calibrated SUMO scenarios and connected/autonomous vehicle (CAV) controllers for microsimulation of mixed traffic.
-The repository uses the TraCI API and optional compiled controllers (codegen + C/C++) to directly command CAV longitudinal behavior in simulation.
+A collection of calibrated SUMO scenarios and connected/autonomous vehicle (CAV) controllers for **microsimulation of mixed traffic**.  
+The repository uses the **TraCI API** and optional **compiled controllers** (codegen + C/C++) to directly command CAV longitudinal behavior in simulation.
+
+On top of the controllers and scenarios, the project provides:
+
+- A **multi-aspect analysis pipeline** (`analysis.py`) that evaluates PCC/CAV penetration in terms of safety, mobility, fuel consumption and driving behavior.
+- An interactive, publication-oriented **dashboard** (`dashboard.py`) that visualizes these metrics and exports plot-ready datasets and time–space diagrams.
+
+
+## Overview
+
+`cav-sumo` provides a reusable environment for exploring **CAV penetration**, **longitudinal controllers**, and **mixed traffic dynamics** in SUMO.
+
+The workflow is:
+
+1. Run SUMO with PCC or other CAV controllers at different penetration levels.
+2. Use `analysis.py` to build a **multi-aspect evaluation** of each experiment:
+   - safety, mobility, environmental impact, behavioral indicators, macroscopic wave patterns, and microsimulation quality control.
+3. Use `dashboard.py` to **visualize and export** these metrics in a Dash/Plotly web app:
+   - interactive tabs (Safety, Mobility, Driving Behavioral, Fuel Consumption),
+   - publication-style figures,
+   - CSV/XLSX/JSON exports for offline analysis.
+
+The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii) run controlled experiments across scenarios and penetration levels, and (iii) inspect the resulting traffic and controller performance in a systematic, reproducible way.
+
+
 
 
 
@@ -266,6 +290,7 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
 
 
 
