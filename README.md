@@ -120,7 +120,7 @@ cd codegen
 
 ```bash
 git clone <repository-url>
-cd cav_sumo
+cd cav_pcc_evaluation
 . install.sh
 ```
 
@@ -274,7 +274,7 @@ Useful options (see `dashboard.py -h`):
 A high-level view of the repository (simplified):
 
 ```text
-cav_sumo/
+cav_pcc_evaluation/
 ├── src/                   # Python source (agents, controllers, utilities)
 │   ├── agents.py          # CAV controller bindings (PCC, etc.)
 │   └── ...
@@ -630,6 +630,7 @@ This repository builds on work in:
 
 **Last Updated**: December 2025  
 **Status**: Research / Development Ready
+
 
 
 
