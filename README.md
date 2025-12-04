@@ -362,7 +362,7 @@ This pattern can be reused for custom CAV controllers.
 
 ---
 
-## 📈 Analysis: Multi-Aspect Evaluation
+##  Analysis: Multi-Aspect Evaluation
 
 `analysis.py` is the main **post-simulation evaluation engine**.  
 It takes raw SUMO outputs (FCD, statistics, edge/lane aggregates, and optionally detector/TLS data) and builds a **multi-aspect evaluation** of PCC and other controllers under different CAV penetration levels.
@@ -630,6 +630,7 @@ This repository builds on work in:
 
 **Last Updated**: December 2025  
 **Status**: Research / Development Ready
+
 
 
 
