@@ -44,9 +44,8 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
   - `analysis.py` ingests SUMO outputs (FCD, stats, lane/edge aggregates, detectors/TLS) and builds:
     - **Safety** metrics (TTC, PET, DRAC, headways, PSD).
     - **Mobility** metrics (throughput, delay, speeds, LOS, queues).
-    - **Environmental** metrics (fuel consumption, emissions).
-    - **Behavioral** metrics (following gaps, lane changes, gap acceptance).
-    - **Macroscopic** wave patterns and **microsimulation QC** reports.
+    - **Fuel Consumption** metrics (fuel consumption, emissions).
+    - **Driving Behavior** metrics (following gaps, lane changes, gap acceptance).
   - Optional **urban-signal** analytics: PAoG, GOR, TTS, spillback detection.
 
 - **Interactive, Publication-Ready Dashboard**
@@ -331,6 +330,7 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
 
 
 
