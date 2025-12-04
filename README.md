@@ -94,7 +94,7 @@ What this does:
 
 - Checks for a valid Python + `pip`.
 - Installs SUMO and required Python packages (globally or in your chosen env).
-- Optionally compiles and installs CAV controllers, placing shared libraries in `cav_sumo/` and copying wrappers to `src/`.
+- Optionally compiles and installs CAV controllers, placing shared libraries in `cav_pcc_evaluation/` and copying wrappers to `src/`.
 
 >  You can edit `install.sh` to enable virtual environments, e.g. `USING_VENV=1`.
 
@@ -130,7 +130,7 @@ From the **Developer Command Prompt for VS**:
 
 ```bat
 git clone <repository-url>
-cd cav_sumo
+cd cav_pcc_evaluation
 
 rem Run Windows installer
 install.bat
@@ -140,7 +140,7 @@ This will:
 
 - Install SUMO dependencies.
 - Attempt to compile the CAV controllers using `cmake`.
-- Copy the shared libraries to the `cav_sumo/` root.
+- Copy the shared libraries to the `cav_pcc_evaluation/` root.
 - Copy `cwrapper.py` to `src/`.
 
 To run only the controller installers (without SUMO install):
@@ -198,7 +198,7 @@ cd ..
 
 ### 1. Run Mixed Traffic Simulation
 
-From the `cav_sumo/` root:
+From the `cav_pcc_evaluation/` root:
 
 ```bash
 python main.py
@@ -233,7 +233,7 @@ python analysis.py -h   # View options
 You can configure:
 
 - Which output file/folder to read.
-- Whether to run in freeway or **urban** mode.
+- Whether to run in freeway or urban mode.
 - Where to write processed metrics and exports.
 
 ---
@@ -290,9 +290,6 @@ cav_sumo/
 │   ├── i24/
 │   └── ...
 │
-├── ext/                   # External clients for XIL (e.g., SIL/HIL)
-│   └── vehicle_sim.py
-│
 ├── output/                # Simulation outputs (per-scenario subfolders)
 │   └── .../excel_file/    # Analysis exports used by dashboard
 │
@@ -310,7 +307,7 @@ cav_sumo/
 
 ---
 
-## 🚗 Scenarios & Controllers
+## Scenarios & Controllers
 
 ### Scenarios
 
@@ -323,8 +320,8 @@ cav_sumo/
 
 ### Controllers
 
-- **PCC (Predictive Cruise Controller)**:
-  - Longitudinal-only CAV controller compiled via `codegen/pcc_codegen`.
+- **PCC (Probabilistic Cruise Controller)**:
+  - Longitudinal CAV controller compiled via `codegen/pcc_codegen`.
   - Invoked from Python using shared libraries + wrappers.
 
 - **TraCI Loop Example** (simplified):
@@ -383,7 +380,7 @@ Typical input files from SUMO include:
 - **Edge / lane aggregates**, e.g. `by_edge.xml`, `by_lane.xml`  
   For macroscopic and quality-control measures.
 
-- **(Urban mode)** Detector and signal data  
+- **(Optional: Urban mode)** Detector and signal data  
   TLS time series, static `tlLogic`, detector outputs, and lane mapping (`add.xml`).
 
 ### Metric families
@@ -395,7 +392,6 @@ The script organizes metrics into several dimensions:
    - PET (Post-Encroachment Time) distribution.
    - Time headway distribution (HDV and CAV).
    - DRAC (Deceleration Rate to Avoid a Crash).
-   - Proportion of Stopping Distance (PSD), where PSD < 1 indicates an unavoidable crash even with max deceleration.
 
 2. **Mobility**
    - Throughput vs. penetration rate.
@@ -403,12 +399,12 @@ The script organizes metrics into several dimensions:
    - Lane-/edge-specific travel times and level of service.
    - Queue length and stop time at bottlenecks / intersections.
 
-3. **Environmental Impact**
+3. **Fuel Consumption**
    - Emissions (per vehicle / scenario).
    - Fuel consumption rate based on a physics-inspired traction-power model:
      traction power + auxiliaries, idle floor, BSFC-based fuel-rate conversion (g/s), with stable behavior at low speeds.
 
-4. **Behavioral**
+4. **Driving Behavior**
    - Overtaking / lane-change rate and duration.
    - HDV/CAV following gap and headway distributions.
    - Gap acceptance at merges / lane changes.
@@ -417,11 +413,6 @@ The script organizes metrics into several dimensions:
 5. **Macroscopic characteristics**
    - Shockwave propagation and stop-and-go wave intensity along the corridor.
    - Aggregate speed-flow-density patterns.
-
-6. **Microsimulation quality-control**
-   - Lane/edge-level travel time consistency.
-   - Real-time factor, vehicles inserted/teleported/jammed/waiting.
-   - Hard-braking / emergency-braking counts.
 
 ### Urban signal analytics (`urban_mode`)
 
@@ -455,7 +446,7 @@ In short, `analysis.py` turns raw SUMO logs into a consistent, publication-ready
 
 ---
 
-## 📊 Dashboard
+## Dashboard
 
 `dashboard.py` is an interactive **front-end** on top of `analysis.py`.  
 It reads the processed metrics and exports from the analysis pipeline and exposes them through a Dash/Plotly web app.
@@ -464,9 +455,10 @@ It reads the processed metrics and exports from the analysis pipeline and expose
 
 - Multiple analysis tabs:
   - **Safety** – TTC/PET/headways/DRAC distributions and related indicators.
-  - **Mobility** – throughput, delay, speeds, lane and edge-level travel times.
-  - **Behavioral** – following gaps, lane-change rates, overtaking, CAV vs. HDV comparisons.
-  - **Time–Space** – time–space diagrams with CAV penetration overlays and export tools.
+  - **Mobility** – throughput, delay, speeds, accelerations, travel times.
+  - **Behavioral** – space gap, lane-change frequency, gap acceptance.
+  - **Fuel Consumption** – fuel efficiency, per-trip fuel consumption, avergage fuel consumption.
+  - **Time–Space** (disable) – time–space diagrams with CAV penetration overlays and export tools.
   - **Urban Signals** (optional) – PAoG, GOR, approach delay, TTS, and spillback charts.
 
 - Interactive filters:
@@ -474,9 +466,6 @@ It reads the processed metrics and exports from the analysis pipeline and expose
   - Direction, lanes, lane prefixes, and position windows.
   - Warm-up trimming and queue-clearing thresholds (aligned with `analysis.py`).
 
-- Publication-style visuals:
-  - A custom Plotly template (e.g., `paper_pub`) with clean grids and consistent fonts.
-  - Unified color palette (e.g., HDV vs. CAV) across all plots.
 
 ### Relationship to `analysis.py`
 
@@ -487,18 +476,6 @@ The dashboard is intentionally **thin** on heavy computation:
   - Rebuild metrics when inputs changed.
 - This keeps the dashboard responsive even for large networks and long simulations.
 - All thresholds, gates, and definitions are shared with the analysis code, so the plots match the numerical results used in papers.
-
-Conceptually:
-
-```mermaid
-graph TD
-    A[SUMO FCD / XML outputs] --> B[analysis.py (TrafficMetrics)]
-    B --> C[Metrics & Cache Files]
-    C --> D[dashboard.py (Dash Web App)]
-    D --> E[Interactive Components]
-    D --> F[Plots / Visualizations]
-    D --> G[Exports (CSV/XLSX/JSON)]
-```
 
 ### Time–Space viewer and exporters
 
@@ -545,7 +522,7 @@ The dashboard then loads (or rebuilds) the metrics via `analysis.py` and exposes
 
 ---
 
-## 🔄 XIL-Based Simulation
+##  XIL-Based Simulation
 
 `main_xil.py` turns SUMO into a real-time server that can be driven by external vehicle simulators or hardware-in-the-loop components.
 
@@ -572,7 +549,7 @@ python -m ext.vehicle_sim -h
 
 ---
 
-## 🛠 Debugging / FAQ
+## Debugging / FAQ
 
 ### 1. Shared library `<cav_controller>` not found
 
@@ -597,7 +574,7 @@ python -m ext.vehicle_sim -h
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Suggested improvements include:
 
@@ -626,13 +603,13 @@ Please:
 
 ---
 
-## 📝 License
+##  License
 
 See the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👤 Contact
+##  Contact
 
 For questions, bug reports, or feature requests:
 
@@ -641,7 +618,7 @@ For questions, bug reports, or feature requests:
 
 ---
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 This repository builds on work in:
 
@@ -653,6 +630,7 @@ This repository builds on work in:
 
 **Last Updated**: December 2025  
 **Status**: Research / Development Ready
+
 
 
 
