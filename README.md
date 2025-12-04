@@ -11,21 +11,12 @@ This library uses the TraCI API to directly command the acceleration behavior of
 
 
 ## File Contents Structure
-Compiled autonomous vehicle controllers are generated in **codegen/** folder
 
 The main source files to execute the CAV controllers are located in the **src/** folder
 
 Simulation analysis scripts are located in **scripts/** folder
 
 Simulation output data will be generated into a local **<scenario\>/output/** folder
-
-Simulation saved plots will be generated into a local **figures/** folder
-
-Various helper scripts for adjusting the simulations are located in **tools/** folder
-
-Everything-in-the-loop (XIL) extended framework scripts are located in **ext/**
-
-Uncalibrated and nominal scenarios are located in **dev/** folder
 
 ## Dependencies
     - Python
@@ -266,5 +257,6 @@ Add a ROS binding
 - The <cav_controller> shared library file cannot be found, but I can see it in my directory
 
     > Check that the installation path in the *PCC* class within **agents.py** points to the correct file location.
+
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
