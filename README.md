@@ -42,16 +42,15 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
 
 - **Multi-Aspect Post-Simulation Analysis**
   - `analysis.py` ingests SUMO outputs (FCD, stats, lane/edge aggregates, detectors/TLS) and builds:
-    - **Safety** metrics (TTC, PET, DRAC, headways, PSD).
-    - **Mobility** metrics (throughput, delay, speeds, LOS, queues).
-    - **Fuel Consumption** metrics (fuel consumption, emissions).
+    - **Safety** metrics (TTC, PET, DRAC, headways).
+    - **Mobility** metrics (throughput, delay, speeds, acceleration, queues).
+    - **Fuel Consumption** metrics (fuel consumption, fuel efficiency).
     - **Driving Behavior** metrics (following gaps, lane changes, gap acceptance).
   - Optional **urban-signal** analytics: PAoG, GOR, TTS, spillback detection.
 
 - **Interactive, Publication-Ready Dashboard**
   - `dashboard.py` wraps the analysis results in a Dash/Plotly web app:
-    - Tabs for Safety, Mobility, Behavioral, Time–Space, and Urban Signals.
-    - Unified “paper” style (clean grid, consistent fonts, HDV/CAV color scheme).
+    - Tabs for Safety, Mobility, Driving Behavior, Fuel Consumption.
     - Time–space viewer and exporters (CSV) for detailed lane-level visualization.
     - XLSX/CSV/JSON exports of plot-ready datasets and spillback events.
 
@@ -64,11 +63,6 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
   - `main.py` for SUMO mixed traffic runs.
   - `analysis.py` for aggregating, caching, and exporting metrics.
   - Scenario-based organization of inputs and outputs for reproducibility.
-
-- **XIL (SIL/HIL-Ready) Support**
-  - `main_xil.py` to run SUMO as a multi-threaded server.
-  - `ext/vehicle_sim` client example for Software-in-the-Loop testing.
-
 ---
 
 
@@ -330,6 +324,7 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
 
 
 
