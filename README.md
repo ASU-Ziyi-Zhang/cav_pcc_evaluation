@@ -19,17 +19,58 @@ On top of the controllers and scenarios, the project provides:
 
 The workflow is:
 
-1. Run SUMO with PCC or other CAV controllers at different penetration levels.
+1. Run SUMO with PCC controllers at different penetration levels.
 2. Use `analysis.py` to build a **multi-aspect evaluation** of each experiment:
    - safety, mobility, environmental impact, behavioral indicators, macroscopic wave patterns, and microsimulation quality control.
 3. Use `dashboard.py` to **visualize and export** these metrics in a Dash/Plotly web app:
    - interactive tabs (Safety, Mobility, Driving Behavioral, Fuel Consumption),
-   - publication-style figures,
    - CSV/XLSX/JSON exports for offline analysis.
 
 The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii) run controlled experiments across scenarios and penetration levels, and (iii) inspect the resulting traffic and controller performance in a systematic, reproducible way.
 
+---
 
+## ✨ Key Features
+
+- **CAV Longitudinal Control via TraCI**
+  - Python-based TraCI control loop with direct access to vehicle states.
+  - Example implementation of a predictive cruise controller (PCC).
+
+- **Compiled Controller Support (Codegen)**
+  - Optional C/C++-compiled controllers with shared libraries (`.so` / `.dll`).
+  - `cmake`-based build scripts and wrappers (`cwrapper.py`, `cppwrapper.py`).
+
+- **Multi-Aspect Post-Simulation Analysis**
+  - `analysis.py` ingests SUMO outputs (FCD, stats, lane/edge aggregates, detectors/TLS) and builds:
+    - **Safety** metrics (TTC, PET, DRAC, headways, PSD).
+    - **Mobility** metrics (throughput, delay, speeds, LOS, queues).
+    - **Environmental** metrics (fuel consumption, emissions).
+    - **Behavioral** metrics (following gaps, lane changes, gap acceptance).
+    - **Macroscopic** wave patterns and **microsimulation QC** reports.
+  - Optional **urban-signal** analytics: PAoG, GOR, TTS, spillback detection.
+
+- **Interactive, Publication-Ready Dashboard**
+  - `dashboard.py` wraps the analysis results in a Dash/Plotly web app:
+    - Tabs for Safety, Mobility, Behavioral, Time–Space, and Urban Signals.
+    - Unified “paper” style (clean grid, consistent fonts, HDV/CAV color scheme).
+    - Time–space viewer and exporters (CSV) for detailed lane-level visualization.
+    - XLSX/CSV/JSON exports of plot-ready datasets and spillback events.
+
+- **Cross-Platform Setup**
+  - Shell-based installer for Linux (and Git Bash on Windows).
+  - Batch installer for Windows Developer Command Prompt.
+  - Manual install path for custom Python/SUMO environments.
+
+- **Simulation & Analysis Pipeline**
+  - `main.py` for SUMO mixed traffic runs.
+  - `analysis.py` for aggregating, caching, and exporting metrics.
+  - Scenario-based organization of inputs and outputs for reproducibility.
+
+- **XIL (SIL/HIL-Ready) Support**
+  - `main_xil.py` to run SUMO as a multi-threaded server.
+  - `ext/vehicle_sim` client example for Software-in-the-Loop testing.
+
+---
 
 
 
@@ -290,6 +331,7 @@ Add a ROS binding
 
 
     > After this, the <cav_controller> file may need to be re-compiled for your system. Follow the compiled controller install steps above, which rely on a working *cmake* installation.
+
 
 
 
