@@ -1,3 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multi-Aspect Dashboard for Mixed-Traffic Impacts of CAVs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Plotly CDN -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <!-- PapaParse for CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <style>
+    body {
+      font-family: "Times New Roman", "Nimbus Roman No9 L",
+                   "Liberation Serif", "DejaVu Serif", serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fafafa;
+      padding-top: 170px; /* room for fixed header */
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 16px 40px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    /* Fixed header with title, selectors, tabs */
+    .header-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #fafafa;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+      z-index: 10;
+    }
+    .header-inner {
+      padding: 16px 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* selector bar */
+    .selector-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: #f1f5f9;
+      border: 1px solid #e2e8f0;
+    }
+    .selector-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .selector-bar select {
+      font-family: "Times New Roman", "Times", serif;
+      font-size: 13px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      background-color: #fff;
+    }
+    .selector-spacer {
+      flex: 1 1 auto;
+    }
+
+    /* tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 6px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .tab-btn.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Layout: left summary, right content */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .summary-column {
+      position: sticky;
+      top: 100px;
+    }
+
+    /* summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .summary-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+    }
+    .summary-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 4px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-weight: 500;
+      color: #555;
+    }
+    .stat-value {
+      color: #222;
+    }
+    /* second row cards */
+    .summary-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* chart grid */
+    .chart-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 2px 2px;
+    }
+    .chart {
+      width: 100%;
+      min-height: 300px;
+    }
+
+    @media (max-width: 1100px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .summary-column {
+        position: relative;
+        top: auto;
+      }
+      .chart-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .chart-grid-3 {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .selector-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="container header-inner">
+      <h1 id="page-title">Multi-Aspect Dashboard for Mixed-Traffic Impacts of CAVs</h1>
+
+      <!-- Scenario / penetration selector -->
+      <div class="selector-bar">
+        <span class="selector-label">Scenario:</span>
+        <select id="scenario-select">
+          <option value="onramp">On-ramp</option>
+          <option value="i24">I-24</option>
+        </select>
+
+        <span class="selector-label">CAV penetration:</span>
+        <select id="penetration-select">
+          <option value="0">0%</option>
+          <option value="10">10%</option>
+          <option value="20">20%</option>
+          <option value="30">30%</option>
+          <option value="40">40%</option>
+          <option value="50">50%</option>
+          <option value="60">60%</option>
+          <option value="70">70%</option>
+          <option value="80">80%</option>
+          <option value="90">90%</option>
+        </select>
+
+        <span class="selector-spacer"></span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="safety">Safety</button>
+        <button class="tab-btn" data-tab="mobility">Mobility</button>
+        <button class="tab-btn" data-tab="behavior">Behavior</button>
+        <button class="tab-btn" data-tab="fuel">Fuel</button>
+        <button class="tab-btn" data-tab="timespace">Time–Space</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="main-layout">
+      <div class="summary-column">
+        <!-- Summary: 第一行 -->
+        <div class="summary-grid" id="summary-row-1"></div>
+        <!-- Summary: 第二行 -->
+        <div class="summary-grid-2" id="summary-row-2"></div>
+      </div>
+
+      <div class="content-column">
+        <!-- Safety Tab -->
+        <div class="tab-content active" id="tab-safety">
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">TTC Distribution</div>
+              <div id="chart-ttc" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">PET Distribution</div>
+              <div id="chart-pet" class="chart"></div>
+            </div>
+          </div>
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Headway Distribution</div>
+              <div id="chart-headway" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Deceleration Rate to Avoid Crash (DRAC)</div>
+              <div id="chart-drac" class="chart"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobility Tab -->
+        <div class="tab-content" id="tab-mobility">
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Speed Distribution</div>
+              <div id="chart-speed" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Acceleration Distribution</div>
+              <div id="chart-accel" class="chart"></div>
+            </div>
+          </div>
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Travel Time Distribution</div>
+              <div id="chart-tt" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Vehicle Count Over Time</div>
+              <div id="chart-vcount" class="chart"></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Delay per Mile: HDV vs CAV</div>
+            <div id="chart-delay" class="chart"></div>
+          </div>
+        </div>
+
+        <!-- Behavior Tab -->
+        <div class="tab-content" id="tab-behavior">
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Lane Change Frequency</div>
+              <div id="chart-lc" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Gap Acceptance</div>
+              <div id="chart-gap" class="chart"></div>
+            </div>
+          </div>
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Space Gap</div>
+              <div id="chart-spacegap" class="chart"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fuel Tab -->
+        <div class="tab-content" id="tab-fuel">
+          <div class="chart-grid-2">
+            <div class="chart-card">
+              <div class="chart-title">Fuel Efficiency (mile/gal)</div>
+              <div id="chart-fuel-eff" class="chart"></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-title">Per-trip Fuel Consumption</div>
+              <div id="chart-fuel-hist" class="chart"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Time–Space Tab -->
+        <div class="tab-content" id="tab-timespace">
+          <div class="chart-card">
+            <div class="chart-title">Time–Space Diagram (colored by speed)</div>
+            <div id="chart-timespace" class="chart" style="height:480px;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 把 JSON 原文 embed 进来，完全自包含 -->
+  <script id="data-json" type="application/json">
 {
   "meta": {
     "scenario": "i24",
@@ -29670,3 +30035,599 @@
     }
   }
 }
+  </script>
+
+  <script>
+    const COLOR_MAP = {
+      HDV: "#1f77b4",
+      CAV: "#d62728"
+    };
+
+    // 全局 Plotly 字体设置（Times New Roman）
+    const PLOT_FONT_FAMILY = "'Times New Roman', 'Times', 'serif'";
+    const PLOT_FONT = {
+      family: PLOT_FONT_FAMILY,
+      size: 14
+    };
+
+    // 场景 + 渗透率 -> 报告文件名（你有哪个，就在这里填哪个）
+    const REPORT_URLS = {
+      "onramp": {
+        "0":  "onramp_p0.0_report.html",
+        "10": "onramp_p0.1_report.html",
+        "20": "onramp_p0.2_report.html",
+        "30": "onramp_p0.3_report.html",
+        "40": "onramp_p0.4_report.html",
+        "50": "onramp_p0.5_report.html",
+        "60": "onramp_p0.6_report.html",
+        "70": "onramp_p0.7_report.html",
+        "80": "onramp_p0.8_report.html",
+        "90": "onramp_p0.9_report.html"
+      },
+      "i24": {
+        "0":  "i24_p0.0_report.html",
+        "10": "i24_p0.1_report.html",
+        "20": "i24_p0.2_report.html",
+        "30": "i24_p0.3_report.html",
+        "40": "i24_p0.4_report.html",
+        "50": "i24_p0.5_report.html",
+        "60": "i24_p0.6_report.html",
+        "70": "i24_p0.7_report.html",
+        "80": "i24_p0.8_report.html",
+        "90": "i24_p0.9_report.html"
+      }
+    };
+
+    // Time–Space CSV 路径：在 renderAll 里根据 meta.run_label 设置
+    let TIMESPACE_CSV_URL = null;
+    let timeSpaceLoaded = false;
+
+    function getData() {
+      const el = document.getElementById("data-json");
+      if (!el) return null;
+      try {
+        return JSON.parse(el.textContent);
+      } catch (e) {
+        console.error("Failed to parse embedded JSON:", e);
+        return null;
+      }
+    }
+
+    function buildSummary(data) {
+      const meta = data.meta || {};
+      const summary = data.summary || {};
+      const perf = summary.performance || {};
+      const vehs = summary.vehicles || {};
+      const tele = summary.teleports || {};
+      const delay = summary.delay || {};
+      const fuel = summary.fuel || {};
+
+      document.getElementById("page-title").textContent =
+        "Multi-Aspect Dashboard for Mixed-Traffic Impacts of CAVs";
+
+      const row1 = document.getElementById("summary-row-1");
+      const row2 = document.getElementById("summary-row-2");
+      row1.innerHTML = "";
+      row2.innerHTML = "";
+
+      function makeCard(title, rows) {
+        const card = document.createElement("div");
+        card.className = "summary-card";
+        const t = document.createElement("div");
+        t.className = "summary-title";
+        t.textContent = title;
+        card.appendChild(t);
+        rows.forEach(([label, value]) => {
+          const r = document.createElement("div");
+          r.className = "stat-row";
+          const l = document.createElement("span");
+          l.className = "stat-label";
+          l.textContent = label;
+          const v = document.createElement("span");
+          v.className = "stat-value";
+          v.textContent = value;
+          r.appendChild(l);
+          r.appendChild(v);
+          card.appendChild(r);
+        });
+        return card;
+      }
+
+      const perfRows = [
+        ["Duration", (perf.duration_s || 0).toFixed(1) + " s"],
+        ["Real Time Factor", (perf.real_time_factor || 0).toFixed(2)],
+        ["Updates/s", (perf.vehicle_updates_per_second || 0).toFixed(1)]
+      ];
+      const vehRows = [
+        ["Inserted", String(vehs.inserted || 0)],
+        ["Running", String(vehs.running || 0)],
+        ["Waiting", String(vehs.waiting || 0)]
+      ];
+      const teleRows = [
+        ["Total", String(tele.total || 0)],
+        ["Jams", String(tele.jam || 0)]
+      ];
+
+      row1.appendChild(makeCard("Performance", perfRows));
+      row1.appendChild(makeCard("Vehicles", vehRows));
+      row1.appendChild(makeCard("Teleports", teleRows));
+
+      const delayRows = [
+        ["HDV Delay/Mile", (delay.hdv_delay_per_mile || 0).toFixed(1) + " s/mi"],
+        ["CAV Delay/Mile", (delay.cav_delay_per_mile || 0).toFixed(1) + " s/mi"],
+        ["HDV Total Delay", (delay.hdv_total_delay || 0).toFixed(1) + " s"],
+        ["CAV Total Delay", (delay.cav_total_delay || 0).toFixed(1) + " s"]
+      ];
+      const fuelRows = [
+        ["HDV mpg", (fuel.hdv_fuel_efficiency_mpg || 0).toFixed(2)],
+        ["CAV mpg", (fuel.cav_fuel_efficiency_mpg || 0).toFixed(2)],
+        ["CAV Fuel Savings",
+          (fuel.cav_fuel_efficiency_mpg_savings_percent || 0).toFixed(1) + " %"]
+      ];
+      row2.appendChild(makeCard("Delay", delayRows));
+      row2.appendChild(makeCard("Fuel Summary", fuelRows));
+    }
+
+    // 通用：直方图（HDV/CAV overlay）
+    function plotHist(hist, divId, xLabel, title) {
+      if (!hist) {
+        Plotly.newPlot(divId, [], {
+          title: title || "",
+          font: PLOT_FONT
+        });
+        return;
+      }
+      let hdv = hist.hdv || [];
+      let cav = hist.cav || [];
+
+      let x = [];
+      if (Array.isArray(hist.bin_mid) && hist.bin_mid.length === hdv.length) {
+        x = hist.bin_mid;
+      } else if (Array.isArray(hist.k) && hist.k.length === hdv.length) {
+        x = hist.k;
+      } else {
+        x = [];
+      }
+
+      const data = [];
+      if (x.length && hdv.length) {
+        data.push({
+          type: "bar",
+          x: x,
+          y: hdv,
+          name: "HDV",
+          marker: {color: COLOR_MAP.HDV},
+          opacity: 0.6
+        });
+      }
+      if (x.length && cav.length) {
+        data.push({
+          type: "bar",
+          x: x,
+          y: cav,
+          name: "CAV",
+          marker: {color: COLOR_MAP.CAV},
+          opacity: 0.6
+        });
+      }
+
+      const layout = {
+        title: title || "",
+        font: PLOT_FONT,
+        barmode: "overlay",
+        height: 280,
+        margin: {l: 50, r: 30, t: 40, b: 50},
+        xaxis: {
+          title: {text: xLabel || "", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        yaxis: {
+          title: {text: "Count", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        legend: {orientation: "h", y: 1.15}
+      };
+      Plotly.newPlot(divId, data, layout, {responsive: true});
+    }
+
+    // DRAC 箱线图：用 safety.drac.samples 里的抽样点
+    function plotDracBox(drac, divId) {
+      if (!drac || !drac.samples) {
+        Plotly.newPlot(divId, [], {
+          title: "Deceleration Rate to Avoid Crash",
+          font: PLOT_FONT,
+          margin: {l: 60, r: 20, t: 40, b: 50},
+          yaxis: {
+            title: {text: "DRAC (m/s²)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+            tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+          }
+        });
+        return;
+      }
+      const hdv = (drac.samples.hdv || []).filter(v => v != null);
+      const cav = (drac.samples.cav || []).filter(v => v != null);
+
+      const data = [];
+      if (hdv.length) {
+        data.push({
+          type: "box",
+          name: "HDV",
+          y: hdv,
+          marker: {color: COLOR_MAP.HDV},
+          boxpoints: "outliers",
+          jitter: 0.3,
+          pointpos: 0
+        });
+      }
+      if (cav.length) {
+        data.push({
+          type: "box",
+          name: "CAV",
+          y: cav,
+          marker: {color: COLOR_MAP.CAV},
+          boxpoints: "outliers",
+          jitter: 0.3,
+          pointpos: 0
+        });
+      }
+
+      const layout = {
+        title: "Deceleration Rate to Avoid Crash",
+        font: PLOT_FONT,
+        height: 280,
+        margin: {l: 60, r: 30, t: 40, b: 60},
+        yaxis: {
+          title: {text: "DRAC (m/s²)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        boxmode: "group"
+      };
+      Plotly.newPlot(divId, data, layout, {responsive: true});
+    }
+
+    function plotVehicleCount(ts, divId) {
+      const vc = ts.vehicle_count || {};
+      const t = vc.time_s || [];
+      const hdv = vc.num_hdvs || [];
+      const cav = vc.num_cavs || [];
+
+      const data = [];
+      if (t.length && hdv.length) {
+        data.push({
+          type: "scatter",
+          mode: "lines",
+          x: t,
+          y: hdv,
+          name: "HDV",
+          line: {color: COLOR_MAP.HDV}
+        });
+      }
+      if (t.length && cav.length) {
+        data.push({
+          type: "scatter",
+          mode: "lines",
+          x: t,
+          y: cav,
+          name: "CAV",
+          line: {color: COLOR_MAP.CAV}
+        });
+      }
+      const layout = {
+        title: "",
+        font: PLOT_FONT,
+        height: 280,
+        margin: {l: 50, r: 30, t: 30, b: 50},
+        xaxis: {
+          title: {text: "Time (s)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        yaxis: {
+          title: {text: "Vehicle Count", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        legend: {orientation: "h", y: 1.15}
+      };
+      Plotly.newPlot(divId, data, layout, {responsive: true});
+    }
+
+    function plotDelayCompare(mobility, divId) {
+      const dc = mobility.delay_compare || {};
+      const hdv = dc.hdv || {};
+      const cav = dc.cav || {};
+
+      const x = ["HDV", "CAV"];
+      const y = [
+        hdv.delay_per_mile || 0,
+        cav.delay_per_mile || 0
+      ];
+      const hover = [
+        "Total delay: " + (hdv.total_delay || 0).toFixed(1) +
+          " s<br>Miles: " + (hdv.total_miles || 0).toFixed(2),
+        "Total delay: " + (cav.total_delay || 0).toFixed(1) +
+          " s<br>Miles: " + (cav.total_miles || 0).toFixed(2)
+      ];
+
+      const data = [{
+        type: "bar",
+        x: x,
+        y: y,
+        text: y.map(v => v.toFixed(1)),
+        textposition: "outside",
+        marker: {color: [COLOR_MAP.HDV, COLOR_MAP.CAV]},
+        hovertext: hover,
+        hoverinfo: "text"
+      }];
+      const layout = {
+        font: PLOT_FONT,
+        height: 280,
+        margin: {l: 50, r: 30, t: 40, b: 50},
+        xaxis: {
+          title: {text: "Vehicle Type", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        yaxis: {
+          title: {text: "Delay per Mile (s/mile)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        showlegend: false
+      };
+      Plotly.newPlot(divId, data, layout, {responsive: true});
+    }
+
+    function plotFuel(dataFuel, summaryFuel, divIdEff, divIdHist) {
+      const x = ["HDV", "CAV"];
+      const y = [
+        summaryFuel.hdv_fuel_efficiency_mpg || 0,
+        summaryFuel.cav_fuel_efficiency_mpg || 0
+      ];
+      const cavSavings = summaryFuel.cav_fuel_efficiency_mpg_savings_percent || 0;
+      const hover = [
+        "Total fuel: " + (summaryFuel.hdv_total_fuel_g || 0).toFixed(1) +
+          " g<br>Avg per veh: " +
+          (summaryFuel.hdv_avg_fuel_per_vehicle_g || 0).toFixed(1) + " g",
+        "Total fuel: " + (summaryFuel.cav_total_fuel_g || 0).toFixed(1) +
+          " g<br>Avg per veh: " +
+          (summaryFuel.cav_avg_fuel_per_vehicle_g || 0).toFixed(1) + " g"
+      ];
+      const dataEff = [{
+        type: "bar",
+        x: x,
+        y: y,
+        text: y.map(v => v.toFixed(2)),
+        textposition: "outside",
+        marker: {color: [COLOR_MAP.HDV, COLOR_MAP.CAV]},
+        hovertext: hover,
+        hoverinfo: "text"
+      }];
+      const layoutEff = {
+        title: {
+          text: "Fuel Efficiency (mile/gal) — CAV Savings: " +
+                cavSavings.toFixed(1) + " %",
+          font: {family: PLOT_FONT_FAMILY, size: 12}
+        },
+        font: PLOT_FONT,
+        height: 280,
+        margin: {l: 50, r: 30, t: 50, b: 50},
+        yaxis: {
+          title: {text: "mile/gal", font: {family: PLOT_FONT_FAMILY, size: 16}},
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        xaxis: {
+          tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+        },
+        showlegend: false
+      };
+      Plotly.newPlot(divIdEff, dataEff, layoutEff, {responsive: true});
+
+      // per-trip histogram
+      plotHist(dataFuel.per_trip_hist, divIdHist, "Fuel per trip (g)", "");
+    }
+
+    function renderTimeSpace() {
+      if (timeSpaceLoaded) return;
+      timeSpaceLoaded = true;
+
+      if (!TIMESPACE_CSV_URL) {
+        Plotly.newPlot("chart-timespace", [], {
+          title: "Time–Space Diagram — no CSV configured",
+          font: PLOT_FONT
+        });
+        return;
+      }
+
+      Papa.parse(TIMESPACE_CSV_URL, {
+        download: true,
+        header: true,
+        dynamicTyping: true,
+        complete: function(results) {
+          const rows = results.data || [];
+          if (!rows.length) {
+            Plotly.newPlot("chart-timespace", [], {
+              title: "Time–Space Diagram — no data",
+              font: PLOT_FONT
+            });
+            return;
+          }
+
+          const maxPoints = 20000;
+          const step = Math.max(1, Math.floor(rows.length / maxPoints));
+
+          const t = [];
+          const pos = [];
+          const speed = [];
+
+          for (let i = 0; i < rows.length; i += step) {
+            const r = rows[i] || {};
+            const ti = r.time ?? r.t ?? r.time_s;
+            const pi = r.pos ?? r.position ?? r.x;
+            const vi = r.speed ?? r.v ?? r.speed_mps;
+
+            if (ti == null || pi == null || vi == null) continue;
+            t.push(ti);
+            pos.push(pi);
+            speed.push(vi);
+          }
+
+          if (!speed.length) {
+            Plotly.newPlot("chart-timespace", [], {
+              title: "Time–Space Diagram — invalid CSV columns",
+              font: PLOT_FONT
+            });
+            return;
+          }
+
+          let vmin = Math.min(...speed);
+          let vmax = Math.max(...speed);
+          if (!isFinite(vmin) || !isFinite(vmax) || vmin === vmax) {
+            vmin = vmin || 0;
+            vmax = vmax || (vmin + 1);
+          }
+
+          const trace = {
+            type: "scattergl",
+            mode: "markers",
+            x: t,
+            y: pos,
+            marker: {
+              size: 3,
+              color: speed,
+              colorscale: "Viridis",
+              cmin: vmin,
+              cmax: vmax,
+              colorbar: {
+                title: {text: "Speed (m/s)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+                tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+              },
+              showscale: true
+            },
+            hovertemplate:
+              "t=%{x:.1f}s<br>pos=%{y:.1f}m<br>v=%{marker.color:.1f}m/s<extra></extra>"
+          };
+
+          const layout = {
+            title: "Time–Space Diagram (colored by speed)",
+            font: PLOT_FONT,
+            xaxis: {
+              title: {text: "Time (s)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+              tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+            },
+            yaxis: {
+              title: {text: "Position (m)", font: {family: PLOT_FONT_FAMILY, size: 16}},
+              tickfont: {family: PLOT_FONT_FAMILY, size: 14}
+            },
+            margin: {l: 80, r: 60, t: 70, b: 60},
+            height: 480
+          };
+
+          Plotly.newPlot("chart-timespace", [trace], layout, {responsive: true});
+        }
+      });
+    }
+
+    function setupTabs() {
+      const buttons = document.querySelectorAll(".tab-btn");
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const tab = btn.getAttribute("data-tab");
+          buttons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.querySelectorAll(".tab-content").forEach(c => {
+            c.classList.remove("active");
+          });
+          document.getElementById("tab-" + tab).classList.add("active");
+
+          if (tab === "timespace") {
+            renderTimeSpace();
+          }
+        });
+      });
+    }
+
+    function setupScenarioPenSelectors(meta) {
+      const scenSel = document.getElementById("scenario-select");
+      const penSel = document.getElementById("penetration-select");
+
+      if (!scenSel || !penSel) return;
+
+      const scen = meta.scenario || "onramp";
+      let pen = Math.round((meta.cav_penetration || 0) * 100);
+      if (![0,10,20,30,40,50,60,70,80,90].includes(pen)) {
+        pen = 50;
+      }
+
+      scenSel.value = scen in REPORT_URLS ? scen : "onramp";
+      penSel.value = String(pen);
+
+      function navigate() {
+        const s = scenSel.value;
+        const p = penSel.value;
+        const mapping = REPORT_URLS[s] || {};
+        const target = mapping[p];
+        if (!target) {
+          alert("Report not available yet for scenario=" + s + ", CAV=" + p + "%.");
+          scenSel.value = scen;
+          penSel.value = String(pen);
+          return;
+        }
+        if (typeof window !== "undefined") {
+          window.location.href = target;
+        }
+      }
+
+      scenSel.addEventListener("change", navigate);
+      penSel.addEventListener("change", navigate);
+    }
+
+    function renderAll() {
+      const data = getData();
+      if (!data) return;
+
+      const safety = data.safety || {};
+      const mobility = data.mobility || {};
+      const behavior = data.behavior || {};
+      const fuel = data.fuel || {};
+      const timeSeries = data.time_series || {};
+      const summaryFuel = data.summary ? (data.summary.fuel || {}) : (fuel.summary || {});
+
+      buildSummary(data);
+      setupScenarioPenSelectors(data.meta || {});
+
+      // Time–Space CSV 文件名：run_label + "_timespace.csv"
+      const meta = data.meta || {};
+      if (meta.run_label) {
+        TIMESPACE_CSV_URL = meta.run_label + "_timespace.csv";
+      } else {
+        TIMESPACE_CSV_URL = null;
+      }
+      timeSpaceLoaded = false;
+
+      // Safety
+      plotHist(safety.ttc ? safety.ttc.hist : null, "chart-ttc", "TTC (s)", "");
+      plotHist(safety.pet ? safety.pet.hist : null, "chart-pet", "PET (s)", "");
+      plotHist(safety.headway ? safety.headway.hist : null,
+               "chart-headway", "Headway (s)", "");
+      plotDracBox(safety.drac || null, "chart-drac");
+
+      // Mobility
+      plotHist(mobility.speed_hist, "chart-speed", "Speed (m/s)", "");
+      plotHist(mobility.accel_hist, "chart-accel", "Acceleration (m/s²)", "");
+      plotHist(mobility.travel_time_hist, "chart-tt", "Travel Time (s)", "");
+      plotVehicleCount(timeSeries, "chart-vcount");
+      plotDelayCompare(mobility, "chart-delay");
+
+      // Behavior
+      plotHist(behavior.lane_change_hist, "chart-lc", "Lane changes (k)", "");
+      plotHist(behavior.gap_hist, "chart-gap", "Gap (s)", "");
+      plotHist(behavior.space_gap_hist, "chart-spacegap", "Space gap (m)", "");
+
+      // Fuel
+      plotFuel(fuel, summaryFuel, "chart-fuel-eff", "chart-fuel-hist");
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      setupTabs();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
