@@ -12,7 +12,7 @@ On top of the controllers and scenarios, the project provides:
 - A **multi-aspect analysis pipeline** (`analysis.py`) that evaluates PCC/CAV penetration in terms of safety, mobility, fuel consumption and driving behavior.
 - An interactive, publication-oriented **dashboard** (`dashboard.py`) that visualizes these metrics and exports plot-ready datasets and time–space diagrams.
 
-- **Interactive dashboard (GitHub Pages)**  
+- **Interactive dashboard**  
 > Multi-aspect dashboard for mixed-traffic impacts of CAVs (scenario & CAV penetration selectors):  
 > https://asu-ziyi-zhang.github.io/cav_pcc_evaluation/onramp_p0.5_report.html
 
@@ -634,6 +634,7 @@ This repository builds on work in:
 
 **Last Updated**: December 2025  
 **Status**: Research / Development Ready
+
 
 
 
