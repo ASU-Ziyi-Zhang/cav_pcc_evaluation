@@ -8,7 +8,8 @@ import xml.etree.ElementTree as ET
 from scipy.interpolate import interp1d
 from collections import OrderedDict
 
-def update_flows(penetration_rate, input_file="onramp_template.rou.xml", output_file="onramp.rou.xml"):
+def update_flows(penetration_rate, input_file="onramp_template.rou.xml", output_file="onramp.rou.xml",
+                 hdv_type="hdv", cav_type="cav"):
     """
     Split each <flow> in a SUMO routes file into HDV/CAV subflows according to
     the given penetration rate, preserving original timing/routes and attributes.
@@ -16,12 +17,25 @@ def update_flows(penetration_rate, input_file="onramp_template.rou.xml", output_
     Behavior
     --------
     - For each <flow ... vehsPerHour=V ...>, write two flows:
-        * id="{orig}_hdv", type="hdv", vehsPerHour=V*(1-pen)
-        * id="{orig}_cav", type="cav", vehsPerHour=V*pen
+        * id="{orig}_hdv", type=hdv_type, vehsPerHour=V*(1-pen)
+        * id="{orig}_cav", type=cav_type, vehsPerHour=V*pen
       All other attributes (begin, end, route, departLane, departSpeed, etc.)
       are preserved from the original flow.
     - If V is not provided (unlikely), the original flow is copied unchanged.
     - If pen is 0 or 1, only one subflow is written accordingly.
+
+    Parameters
+    ----------
+    penetration_rate : float
+        CAV penetration rate in [0, 1].
+    input_file : str
+        Path to the template .rou.xml file.
+    output_file : str
+        Path where the modified routes file is written.
+    hdv_type : str
+        SUMO vType ID to assign to HDV flows (default: "hdv").
+    cav_type : str
+        SUMO vType ID to assign to CAV flows (default: "cav").
 
     Notes
     -----
@@ -85,10 +99,10 @@ def update_flows(penetration_rate, input_file="onramp_template.rou.xml", output_
 
         # Write HDV part if any
         if hdv_vph > 0:
-            root.append(_mk_flow('hdv', 'hdv', hdv_vph))
+            root.append(_mk_flow('hdv', hdv_type, hdv_vph))
         # Write CAV part if any
         if cav_vph > 0:
-            root.append(_mk_flow('cav', 'cav', cav_vph))
+            root.append(_mk_flow('cav', cav_type, cav_vph))
 
     # Save result
     tree.write(output_file, encoding='UTF-8', xml_declaration=True)
