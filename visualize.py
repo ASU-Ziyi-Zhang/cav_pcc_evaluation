@@ -20,6 +20,9 @@ Usage:
  - Run `python visualize.py` (ensure the CSV path exists).
 """
 
+import os
+import re
+import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -48,30 +51,76 @@ mpl.rcParams["ytick.labelsize"] = 14
 mpl.rcParams["axes.labelsize"] = 14
 mpl.rcParams["axes.titlesize"] = 14
 
-# df = pd.read_csv("sumo_scenarios/i24/excel_file/i24_cav10_timespace.csv.gz")
-df = pd.read_csv("sumo_scenarios/onramp/excel_file/onramp_cav10_timespace.csv.gz")
-print(df.columns.tolist())
-print(df['speed'].describe())
-print(df[['time','veh_id','pos','speed']].head())
+base_dir = os.path.join("sumo_scenarios", "i24", "excel_file")
 
-plt.figure(figsize=(10, 6))
-plt.scatter(df["time"], df["pos"], c=df["speed"], cmap="viridis", s=1, alpha=0.7)
 
-# Colorbar with larger tick labels and slightly smaller label text
-cbar = plt.colorbar()
-cbar.ax.tick_params(labelsize=14)
-cbar.set_label("Speed (m/s)", fontsize=16)
+def find_input_file(entry_path):
+	# If it's a directory, prefer a file containing 'timespace' else any csv(.gz)
+	if os.path.isdir(entry_path):
+		candidates = []
+		for ext in ("*.csv.gz", "*.csv"):
+			candidates.extend(glob.glob(os.path.join(entry_path, ext)))
+		if not candidates:
+			return None
+		timespace = [p for p in candidates if 'timespace' in os.path.basename(p).lower()]
+		return timespace[0] if timespace else candidates[0]
+	# If it's a file and a csv, use it
+	if os.path.isfile(entry_path) and entry_path.endswith(('.csv', '.csv.gz')):
+		return entry_path
+	# Try to find csv files with the same base name in parent dir
+	base = os.path.splitext(entry_path)[0]
+	for ext in ('.csv.gz', '.csv'):
+		p = base + ext
+		if os.path.isfile(p):
+			return p
+	return None
 
-# Axis labels slightly smaller; ticks already set larger via rcParams
-plt.xlabel("Time (s)", fontsize=16)
-plt.ylabel("Position (m)", fontsize=16)
-plt.xticks(fontsize=14)
-plt.yticks(fontsize=14)
-# plt.title("Time–Space Diagram with Speed Color (CAV80)", fontsize=14)
 
-plt.tight_layout()
-# Save before show to ensure the file is written even in non-interactive runs
-# plt.savefig("sumo_scenarios/i24/excel_file/timespace_p10.png", dpi=300, bbox_inches="tight")
-plt.savefig("sumo_scenarios/onramp/excel_file/timespace_p10.png", dpi=300, bbox_inches="tight")
-plt.show()
+def plot_timespace(df, out_path):
+	for c in ('time', 'veh_id', 'pos', 'speed'):
+		if c not in df.columns:
+			print(f"Missing column: {c}")
+	plt.figure(figsize=(10, 6))
+	plt.scatter(df["time"], df["pos"], c=df.get("speed", None), cmap="viridis", s=1, alpha=0.7)
+	cbar = plt.colorbar() if 'speed' in df.columns else None
+	if cbar is not None:
+		cbar.ax.tick_params(labelsize=14)
+		cbar.set_label("Speed (m/s)", fontsize=16)
+	plt.xlabel("Time (s)", fontsize=16)
+	plt.ylabel("Position (m)", fontsize=16)
+	plt.xticks(fontsize=14)
+	plt.yticks(fontsize=14)
+	plt.tight_layout()
+	plt.savefig(out_path, dpi=300, bbox_inches="tight")
+	plt.close()
+
+
+if __name__ == "__main__":
+	file_pattern = re.compile(r'i24_cav(\d+)_mosharafian2022_timespace.*', re.IGNORECASE)
+
+	files = sorted(os.listdir(base_dir))
+	matches = []
+	for f in files:
+		m = file_pattern.fullmatch(f)
+		if m:
+			matches.append((f, m.group(1)))
+
+	if not matches:
+		print(f"No matching timespace files in {base_dir}")
+	else:
+		for fname, num in matches:
+			in_file = os.path.join(base_dir, fname)
+			out_name = f"i24_cav{num}_mosharafian2022.png"
+			out_path = os.path.join(base_dir, out_name)
+			try:
+				df = pd.read_csv(in_file, compression='infer')
+			except Exception as e:
+				print(f"Failed to read {in_file}: {e}")
+				continue
+			print(f"Plotting {in_file} -> {out_path}")
+			try:
+				plot_timespace(df, out_path)
+			except Exception as e:
+				print(f"Failed to plot {in_file}: {e}")
+		print("Done.")
 

@@ -837,7 +837,9 @@ class TrafficMetrics:
             elif tag == "vehicle" and event == "end":
                 try:
                     vid   = elem.get("id")
-                    vtype = (elem.get("type") or "hdv").lower()
+                    vtype_raw = (elem.get("type") or "hdv").lower()
+                    # Normalize: all cav_* variants -> 'cav'
+                    vtype = "cav" if vtype_raw.startswith("cav") else vtype_raw
                     lane  = elem.get("lane") or ""
                     pos   = float(elem.get("pos"))
                     x     = float(elem.get("x"))
@@ -2939,34 +2941,6 @@ class TrafficMetrics:
         print("PET   :", {k:len(v) for k,v in self.pet_list.items()})
         print("travel_times veh:", {k:len(v) for k,v in self.travel_times.items()})
 
-# ## ---------------------------------------------------------- ##
-
-# def main():
-#     # Handle input arguments
-#     parser = argparse.ArgumentParser('Python SUMO data analysis and visualization tool')
-#     parser.add_argument('--scenario_folder',
-#         help='Directory path to search for output file to plot: ["sumo_scenarios", "dev/sumo_scenarios"]. Default "sumo_scenarios"',
-#         default="sumo_scenarios", nargs="?", type=str)
-#     parser.add_argument('--scenario',
-#         help='Select SUMO scenario to analyze from with <scenario_folder>/: ["onramp", "i24"]. Default "onramp"',
-#         default="onramp", nargs="?", type=str)
-#     parser.add_argument('--file',
-#         help='File to plot from <scenario_folder>/<scenario>/output/. Default "fcd.xml"',
-#         default="fcd.xml", nargs="?", type=str)
-#     parser.add_argument('--plotting',
-#         help='Flag to create plots from output file. Default true.', 
-#             default=True, action='store_true')
-#     parser.add_argument('--saving',
-#         help='Flag to save plots from output file. Default true.', 
-#             default=True, action='store_true')
-#     args = parser.parse_args()
-
-
 if __name__ == "__main__":
-    print("not implemented")
-
-    # main()
-    # ax = vis.visualize_fcd("sumo_scenarios/onramp/output/fcd.xml", lanes=None, color_by="fuel_gps") # test function
-
-    # ax.figure.savefig("test.png", dpi=300)
+    pass
 

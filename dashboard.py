@@ -32,64 +32,16 @@ Requirements:
     - pandas
     - numpy
     - dash-bootstrap-components
-"""
 
-'''
-1) Publication‑style visuals
-   - Added `paper_pub` Plotly template (clean grid, serif font, tight margins).
-   - Unified color map for HDV/CAV/PAOG/GOR/TTS.
-   - `_apply_paper_style()` standardizes axis labels/units/grid/legend across plots.
-
-2) Urban signals integration (toggle with `--urban`)
-   - Optional “Urban Signals” tab: PAoG, GOR (incl. type split), Approach Delay, TTS, and spillback charts.
-   - Modes: `auto` (show when detector+TLS exist), `yes` (force show), `no` (hide).
-
-3) Time–Space analysis (viewer + exporter)
-   - Time–Space tab added (Plotly hook to `vis.visualize_fcd()`; placeholder enabled by default).
-   - CSV exporter `export_time_space_csv(...)` with robust filters:
-     warm‑up trimming, position gate, queue‑clearing (CLEAR_V/CLEAR_M), jump detection, stride, optional speed, gzip.
-
-4) Data loading & caching
-   - Uses `load_or_build_metrics()` to reuse cached metrics when inputs are unchanged (signature = mtime+size).
-   - Wired into the dashboard entrypoint to avoid rebuilding metrics on every run.
-
-5) Result export for reproducible figures (CSV/XLSX/JSON)
-   - `export_dashboard_datasets()` writes compact, plot‑ready tables to XLSX (multi‑sheet).
-   - `export_spillback()` saves spillback events to CSV/JSON and prints a console summary.
-   - Added time‑series and histogram bin exports so figures can be regenerated offline.
-
-6) Guardrails & thresholds (UI aligned with analysis defaults)
-   - Harmonized small‑value cutoffs for TTC/PET/Headway/Space‑gap and light clipping
-     for more stable, publication‑friendly plots.
-   - Consistent palette ordering (HDV blue, CAV red) across all tabs.
-
-Note: This commit only refines comments/docstrings/labels/printouts. No functional changes.
-'''
-
-'''
-Visualize traffic metrics in an interactive web dashboard.
-
-graph TD
-    A[SUMO FCD XML] --> B[TrafficMetrics Class]
-    B --> C[Preprocessed Data]
-    C --> D[Dash Web App]
-    D --> E[Interactive Components]
-    D --> F[Plots/Visualizations]
-    D --> G[Stats/Metrics]
-
-'''
-"""
 Usage examples:
-    omramp:
-    python dashboard.py --scenario onramp --urban no --exclude-lane ramp_0 --exclude-lane E2_0 --p 0.1
+    # On-ramp scenario, ACC controller, 10% CAV penetration, excluding ramp lanes
+    python dashboard.py --scenario onramp --urban no --exclude-lane ramp_0 --exclude-lane E2_0 --cav-controller acc --p 0.1
 
-    i24
-    python dashboard.py --scenario i24 --urban no --exclude-lane E2_0 --exclude-lane E4_0 --exclude-lane E6_0  --exclude-lane E1_0 --p 0.1
-      
-    python dashboard.py \
-    --scenario i24b --urban no \
-    $(printf -- '--exclude-lane %q ' "${ALL_EXCLUDES[@]}")
-    
+    # On-ramp scenario, ACC controller, 50% CAV penetration
+    python dashboard.py --scenario onramp --p 0.5 --cav-controller acc
+
+    # I-24 scenario, excluding on-ramp/off-ramp connector lanes
+    python dashboard.py --scenario i24 --urban no --exclude-lane E2_0 --exclude-lane E4_0 --exclude-lane E6_0 --exclude-lane E1_0 --p 0.1
 """
 
 import dash
@@ -381,7 +333,8 @@ def export_dashboard_datasets(metrics, out_dir: str, run_label: str = "run"):
         })
         # Discrete histogram via value_counts
         lc_h = (lc[lc["Type"]=="HDV"]["Lane Changes"].value_counts().sort_index()).rename("HDV")
-        lc_c = (lc[lc["Type"]=="CAV"]["Lane Changes"].value_counts().sort_index()).rename("CAV")
+        # Handle both 'CAV' and 'cav_*' variants
+        lc_c = (lc[lc["Type"].str.upper().str.startswith("CAV")]["Lane Changes"].value_counts().sort_index()).rename("CAV")
         lc_hist = pd.concat([lc_h, lc_c], axis=1).fillna(0).astype(int).reset_index().rename(columns={"index":"k"})
         lc_hist.to_excel(xw, sheet_name="behav_LC_hist", index=False)
 
@@ -1681,6 +1634,13 @@ if __name__ == '__main__':
                         help="Show Urban Signals tab: 'auto' (default, show when detector+TLS present), 'yes' (force show), 'no' (hide)")
     parser.add_argument('--p', '--penetration-tag', dest='p_tag', default="0",
                         help="Penetration tag for output filenames, e.g. 0.1 or p0.1. If provided, dashboard will look for fcd_<tag>.xml and stats_<tag>.xml and will use metrics_<tag>.pkl cache. Default: 0 -> p0")
+    parser.add_argument('--cav-controller', dest='cav_controller', default=None, type=str,
+                        choices=['pcc', 'acc', 'cacc', 'idm',
+                                 'li2018', 'gunter2020', 'sun2024', 'zhang2025',
+                                 'wen2022', 'vajedi2016', 'mosharafian2022', 'kim2021'],
+                        help="CAV controller type. If specified, will look for files with format p{penetration}_{controller}.xml")
+    parser.add_argument('--exp-tag', type=str, default='',
+                        help='Experiment tag to append to filenames (e.g., "mainlane_lc_off", "merging_lc_off")')
 
     # ---- (optional) CLI lane-filtering rules ----
     parser.add_argument('--exclude-lane', action='append', default=[],
@@ -1697,16 +1657,26 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Normalize penetration tag argument to form like 'p0.1' (or None to use defaults)
+    # Normalize penetration tag argument to form like 'p0.1' or 'p0.1_acc' (or None to use defaults)
     if args.p_tag is None:
         pen_tag = None
     else:
         p_raw = str(args.p_tag)
         try:
             p_val = float(p_raw)
-            pen_tag = f"p{p_val:g}"
+            base_tag = f"p{p_val:g}"
         except Exception:
-            pen_tag = p_raw if p_raw.startswith('p') else f"p{p_raw}"
+            base_tag = p_raw if p_raw.startswith('p') else f"p{p_raw}"
+        
+        # Append controller name if specified
+        if args.cav_controller:
+            pen_tag = f"{base_tag}_{args.cav_controller}"
+        else:
+            pen_tag = base_tag
+        
+        # Append experiment tag if specified
+        if args.exp_tag:
+            pen_tag = f"{pen_tag}_{args.exp_tag}"
 
     output_path = os.path.join(args.scenario_folder, args.scenario, 'output')
 
@@ -1746,9 +1716,20 @@ if __name__ == '__main__':
 
     export_spillback(metrics, out_dir=output_path)
 
-    # Call exporters (run_label uses scenario + CAV penetration for clarity)
+    # Call exporters (run_label uses scenario + CAV penetration + controller for clarity)
     output_excel = os.path.join(args.scenario_folder, args.scenario, 'excel_file')
-    run_label = f"{args.scenario}_cav{int(100 * (metrics.num_cavs / max(1, metrics.num_cavs + metrics.num_hdvs)))}"
+    cav_percent = int(100 * (metrics.num_cavs / max(1, metrics.num_cavs + metrics.num_hdvs)))
+    
+    # Build run_label with controller name if specified
+    if args.cav_controller:
+        run_label = f"{args.scenario}_cav{cav_percent}_{args.cav_controller}"
+    else:
+        run_label = f"{args.scenario}_cav{cav_percent}"
+    
+    # Append exp_tag if provided
+    if args.exp_tag:
+        run_label = f"{run_label}_{args.exp_tag}"
+    
     time_space_name = f"{run_label}_timespace.csv.gz"
 
     """
