@@ -10,7 +10,7 @@ The repository uses the **TraCI API** and optional **compiled controllers** (cod
 On top of the controllers and scenarios, the project provides:
 
 - A **unified multi-controller simulation entry point** (`main_controller.py`) that supports PCC, ACC, CACC, IDM, and a growing set of literature-based CAV controllers — all selectable via `--cav-controller`.
-- A **multi-aspect analysis pipeline** (`analysis.py`) that evaluates CAV penetration under each controller in terms of safety, mobility, fuel consumption and driving behavior.
+- A **multi-aspect analysis pipeline** (`analysis.py`) that evaluates CAV penetration under each controller in terms of safety, throughput and stability, fuel consumption, and interactions with other drivers.
 - An interactive, publication-oriented **dashboard** (`dashboard.py`) that visualizes per-controller metrics and exports plot-ready datasets and time–space diagrams.
 
 - **Interactive dashboard**  
@@ -28,7 +28,7 @@ The workflow is:
 2. Use `analysis.py` to build a **multi-aspect evaluation** of each experiment:
    - safety, mobility, environmental impact, behavioral indicators, macroscopic wave patterns, and microsimulation quality control.
 3. Use `dashboard.py` to **visualize and export** these metrics in a Dash/Plotly web app:
-   - interactive tabs (Safety, Mobility, Driving Behavioral, Fuel Consumption),
+   - interactive tabs (safety, throughput and stability, fuel consumption, and interactions with other drivers),
    - per-controller and per-penetration selectors,
    - CSV/XLSX/JSON exports for offline analysis.
 
@@ -64,15 +64,15 @@ The goal is to make it easy to (i) deploy and swap CAV controllers in SUMO, (ii)
 
 - **Multi-Aspect Post-Simulation Analysis**
   - `analysis.py` ingests SUMO outputs (FCD, stats, lane/edge aggregates, detectors/TLS) and builds:
-    - **Safety** metrics (TTC, PET, DRAC, headways).
-    - **Mobility** metrics (throughput, delay, speeds, acceleration, queues).
+    - **Safety** metrics (TTC, PET, DRAC).
+    - **Throughput and Stability** metrics (throughput, delay, speeds, acceleration, queues).
     - **Fuel Consumption** metrics (fuel consumption, fuel efficiency).
-    - **Driving Behavior** metrics (following gaps, lane changes, gap acceptance).
+    - **Interaction with Other Drivers** metrics (headways, following gaps, lane changes, gap acceptance).
   - Optional **urban-signal** analytics: PAoG, GOR, TTS, spillback detection.
 
 - **Interactive, Publication-Ready Dashboard**
   - `dashboard.py` wraps the analysis results in a Dash/Plotly web app:
-    - Tabs for Safety, Mobility, Driving Behavior, Fuel Consumption.
+    - Tabs for safety, throughput and stability, fuel consumption, and interactions with other drivers.
     - `--cav-controller` flag to select which controller's results to display.
     - Time–space viewer and exporters (CSV) for detailed lane-level visualization.
     - XLSX/CSV/JSON exports of plot-ready datasets and spillback events.
@@ -529,10 +529,9 @@ The script organizes metrics into several dimensions:
 1. **Safety**
    - TTC (Time-to-Collision) distribution.
    - PET (Post-Encroachment Time) distribution.
-   - Time headway distribution (HDV and CAV).
    - DRAC (Deceleration Rate to Avoid a Crash).
 
-2. **Mobility**
+2. **Throughput and Stability**
    - Throughput vs. penetration rate.
    - Total delay and average speed.
    - Lane-/edge-specific travel times and level of service.
@@ -543,10 +542,11 @@ The script organizes metrics into several dimensions:
    - Fuel consumption rate based on a physics-inspired traction-power model:
      traction power + auxiliaries, idle floor, BSFC-based fuel-rate conversion (g/s), with stable behavior at low speeds.
 
-4. **Driving Behavior**
+4. **Interaction with Other Drivers**
    - Overtaking / lane-change rate and duration.
    - HDV/CAV following gap and headway distributions.
    - Gap acceptance at merges / lane changes.
+   - Time headway distribution (HDV and CAV).
    - (Planned) reaction time and other microscopic behavior indicators.
 
 5. **Macroscopic characteristics**
@@ -593,9 +593,9 @@ It reads the processed metrics and exports from the analysis pipeline and expose
 ### What the dashboard provides
 
 - Multiple analysis tabs:
-  - **Safety** – TTC/PET/headways/DRAC distributions and related indicators.
-  - **Mobility** – throughput, delay, speeds, accelerations, travel times.
-  - **Behavioral** – space gap, lane-change frequency, gap acceptance.
+  - **Safety** – TTC/PET/DRAC distributions and related indicators.
+  - **Throughput and Stability** – throughput, delay, speeds, accelerations, travel times.
+  - **Interaction with Other Drivers** – space gap, lane-change frequency, gap acceptance, time headways.
   - **Fuel Consumption** – fuel efficiency, per-trip fuel consumption, avergage fuel consumption.
   - **Time–Space** (disable) – time–space diagrams with CAV penetration overlays and export tools.
   - **Urban Signals** (optional) – PAoG, GOR, approach delay, TTS, and spillback charts.
@@ -755,19 +755,6 @@ This repository builds on work in:
 
 **Last Updated**: March 2026  
 **Status**: Research / Development Ready
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
