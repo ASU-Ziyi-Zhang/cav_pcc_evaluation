@@ -10,31 +10,31 @@ This script supports post-simulation analysis. Planned/implemented metrics inclu
 1. Safety
     a. DONE TTC distribution
     b. DONE PET distribution
-    c. DONE Time headway distribution (HDV and CAV)
-    d. Proportion of Stopping Distance (PSD). A PSD value < 1 indicates an unsafe situation,
+    c. Proportion of Stopping Distance (PSD). A PSD value < 1 indicates an unsafe situation,
        since a collision cannot be avoided even with maximum deceleration.
-    e. DONE Deceleration Rate to Avoid a Crash (DRAC)
+    d. DONE Deceleration Rate to Avoid a Crash (DRAC)
 
-2. Mobility
+2. Throughput & Stability
     a. Throughput vs. penetration rate
     b. DONE Total delay
     c. Lane-specific travel time
     d. Level of service
-    c. DONE Average speed
+    e. DONE Average speed
     - Queue length: average/maximum length of vehicle queues at intersections or bottlenecks.
     - Stop time: total time vehicles spend stopped or idling during the simulation.
 
-3. Environmental impact
+3. Fuel Consumption
     a. Emissions
-    b. Fuel consumption rate
+    b. DONE Fuel consumption rate
 
-4. Behavioral
+4. Interaction with Other Drivers
     a. Overtaking rate (frequency and duration of overtaking maneuvers)
     b. DONE HDV/CAV following gap distribution
     c. DONE Lane-change frequency (number of lane changes per vehicle)
     d. Lane-change duration
     e. Reaction time
     f. Gap acceptance (accepted gaps during lane changes or merges)
+    g. DONE Time headway distribution (HDV and CAV)
 
 5. Macroscopic characteristics
     a. Shockwave propagation: extent/intensity of stop‑and‑go waves in the traffic stream.

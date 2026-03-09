@@ -7,7 +7,7 @@ Traffic Simulation Dashboard
 This script creates an interactive web dashboard to visualize and analyze traffic simulation 
 data from SUMO. It provides:
 - Real-time visualization of traffic metrics
-- Multiple analysis tabs (Safety, Mobility, Behavioral, Time-Space)
+- Multiple analysis tabs (Safety, Throughput & Stability, Interaction with Other Drivers, Fuel Consumption, Time-Space)
 - Interactive plots and filters
 - Statistics and performance metrics
 - Support for comparing CAV and HDV behaviors
@@ -255,16 +255,7 @@ def export_dashboard_datasets(metrics, out_dir: str, run_label: str = "run"):
         ])
         drac_df.to_excel(xw, sheet_name="safety_DRAC_summary", index=False)
 
-        # Headway histogram
-        hw_hdv = [v for v in metrics.time_headways.get("hdv", []) if np.isfinite(v) and v >= EPS_HW]
-        hw_cav = [v for v in metrics.time_headways.get("cav", []) if np.isfinite(v) and v >= EPS_HW]
-        hw_max = max([np.percentile(hw_hdv, 99, method="nearest") if hw_hdv else 0,
-                      np.percentile(hw_cav, 99, method="nearest") if hw_cav else 0, 1.0])
-        hw_bins = np.linspace(0, hw_max, 50)
-        hw_hist = _hist_2type(hw_hdv, hw_cav, hw_bins)
-        hw_hist.to_excel(xw, sheet_name="safety_Headway_hist", index=False)
-
-        # ===================== Mobility =====================
+        # ===================== Throughput & Stability =====================
         # Speed histogram
         sv = getattr(metrics, "speeds_vis", metrics.speeds)
         sp_hdv = [v for v in sv.get("hdv", []) if np.isfinite(v)]
@@ -324,7 +315,7 @@ def export_dashboard_datasets(metrics, out_dir: str, run_label: str = "run"):
         })
         delay_df.to_excel(xw, sheet_name="mobility_Delay_compare", index=False)
 
-        # ===================== Behavioral =====================
+        # ===================== Interaction with Other Drivers =====================
         # Lane-change frequency (discrete counts)
         lc = pd.DataFrame({
             "Lane Changes": (metrics.lane_change_frequency.get("hdv", []) + metrics.lane_change_frequency.get("cav", [])),
@@ -366,7 +357,16 @@ def export_dashboard_datasets(metrics, out_dir: str, run_label: str = "run"):
         # Export histogram counts (sufficient for publication figures)
         sg_hist.to_excel(xw, sheet_name="behav_SpaceGap_hist", index=False)
 
-        # ===== Energy & Fuel (from analysis) =====
+        # Time headway histogram
+        hw_hdv = [v for v in metrics.time_headways.get("hdv", []) if np.isfinite(v) and v >= EPS_HW]
+        hw_cav = [v for v in metrics.time_headways.get("cav", []) if np.isfinite(v) and v >= EPS_HW]
+        hw_max = max([np.percentile(hw_hdv, 99, method="nearest") if hw_hdv else 0,
+                      np.percentile(hw_cav, 99, method="nearest") if hw_cav else 0, 1.0])
+        hw_bins = np.linspace(0, hw_max, 50)
+        hw_hist = _hist_2type(hw_hdv, hw_cav, hw_bins)
+        hw_hist.to_excel(xw, sheet_name="interaction_Headway_hist", index=False)
+
+        # ===================== Fuel Consumption =====================
         fuel_stats = metrics.simulation_stats.get('fuel', {})
         fuel_df = pd.DataFrame({
             "Vehicle Type": ["HDV", "CAV"],
@@ -582,20 +582,19 @@ def create_dashboard(metrics, direction=None, urban_mode='auto'):
         ])
       
     tabs_children = [
-        # Safety Metrics Tab
-        dcc.Tab(label='Safety Metrics', children=[
+        # Safety Tab
+        dcc.Tab(label='Safety', children=[
             dbc.Row([
                 dbc.Col(dcc.Graph(id='ttc-plot')), 
                 dbc.Col(dcc.Graph(id='pet-plot'))
             ]),
             dbc.Row([
-                dbc.Col(dcc.Graph(id='drac-plot')),
-                dbc.Col(dcc.Graph(id='headway-plot'))
+                dbc.Col(dcc.Graph(id='drac-plot'))
             ])
         ]),
         
-        # Mobility Metrics Tab
-        dcc.Tab(label='Mobility Metrics', children=[
+        # Throughput & Stability Tab
+        dcc.Tab(label='Throughput & Stability', children=[
             dcc.Interval(id='mobility-init', interval=10000, n_intervals=0),
             dbc.Row([
                 dbc.Col(dcc.Graph(id='speed-plot'), md=6),
@@ -610,14 +609,15 @@ def create_dashboard(metrics, direction=None, urban_mode='auto'):
             ])
         ]),
         
-        # Behavioral Metrics Tab
-        dcc.Tab(label='Behavioral Metrics', children=[
+        # Interaction with Other Drivers Tab
+        dcc.Tab(label='Interaction with Other Drivers', children=[
             dbc.Row([
                 dbc.Col(dcc.Graph(id='lane-change-plot')),
                 dbc.Col(dcc.Graph(id='gap-acceptance-plot'))
             ]),
             dbc.Row([
-                dbc.Col(dcc.Graph(id='space-gap-plot'), md=12)
+                dbc.Col(dcc.Graph(id='space-gap-plot'), md=6),
+                dbc.Col(dcc.Graph(id='headway-plot'), md=6)
             ])
         ]),
 
@@ -1635,7 +1635,7 @@ if __name__ == '__main__':
     parser.add_argument('--p', '--penetration-tag', dest='p_tag', default="0",
                         help="Penetration tag for output filenames, e.g. 0.1 or p0.1. If provided, dashboard will look for fcd_<tag>.xml and stats_<tag>.xml and will use metrics_<tag>.pkl cache. Default: 0 -> p0")
     parser.add_argument('--cav-controller', dest='cav_controller', default=None, type=str,
-                        choices=['pcc', 'acc', 'cacc', 'idm',
+                        choices=['pcc', 'cth', 'acc', 'acc_gunter', 'cacc', 'idm',
                                  'li2018', 'gunter2020', 'sun2024', 'zhang2025',
                                  'wen2022', 'vajedi2016', 'mosharafian2022', 'kim2021'],
                         help="CAV controller type. If specified, will look for files with format p{penetration}_{controller}.xml")
